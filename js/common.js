@@ -1,9 +1,75 @@
-const $dayText = document.getElementById("date-day-text"),
-  $timeText = document.getElementById("date-time-text"),
-  $selectDay = document.getElementById("select-day"),
-  $selectTime = document.getElementById("select-time"),
-  $selectTimeWrap = document.getElementById("select-time-wrap"),
-  $button = document.getElementById("date-confirm");
+
+const url = "https://test-menu.payco.kr/test/api";
+
+
+const scope = {
+
+  object : {
+    $selectDay : document.getElementById("select-day"),
+    $selectTime : document.getElementById("select-time")
+  },
+
+  functions : {
+    getWorkTime : async () => {
+      try {
+        const res = await axios.get(`${url}/work/time`);
+
+        if (res.data.status !== 0) {
+          throw new Error(res.data.message);
+        }
+        
+        mobileSelect.updateWheel(0, res.data.result);
+
+      } catch (error) {    
+        alert(error);
+      }
+    },
+    getWorkPoint : async () => {
+      try {
+
+        let $select_point_type = document.getElementById("select_point_type");
+
+
+        if($select_point_type.value === "") {
+          $select_point_type.focus();
+          throw new Error("조회 type을 선택해주세요");          
+        }
+
+        const res = await axios.post(`${url}/work/point`, { type : $select_point_type.value});
+    
+        if (res.data.status !== 0) {
+          throw new Error(res.data.message);
+        } 
+    
+        console.log(res.data);
+    
+      } catch (error) {    
+        alert(error);
+      }
+    },
+    getWorkPointUseHistory : () => {
+      try {    
+
+        if(scope.object.$selectDay.value === "") {
+          throw new Error("조회 날짜를 선택해주세요.");          
+        }
+
+        if(scope.object.$selectTime.value === "") {
+          throw new Error("조회 시간을 선택해주세요.");          
+        }
+
+        alert("조회성공");
+
+      } catch (error) {    
+        alert(error);
+      }
+    },
+    init : () => {            
+      scope.functions.getWorkTime();
+    }
+  }
+};
+
 
 let mobileSelect2 = new MobileSelect({
   trigger: "#select-time-wrap",
@@ -63,8 +129,8 @@ let mobileSelect2 = new MobileSelect({
   onChange: function (data, indexArr, msInstance) {
     console.log(data);
     const time = data[1].value + data[2].value;
-    $selectTime.innerHTML = time;
-    $timeText.innerHTML = time;
+    scope.object.$selectTime.innerHTML = time;
+    //$timeText.innerHTML = time;
   },
 });
 
@@ -76,8 +142,9 @@ let mobileSelect = new MobileSelect({
   wheels: [{ data: [{ id: "1", value: "choose day" }] }],
   // initValue: "날짜선택", // Initialize value
   onChange: function (data, indexArr, msInstance) {
-    $selectDay.innerHTML = data[0].date;
-    $dayText.innerHTML = data[0].date;
+    scope.object.$selectDay.innerHTML = data[0].date;
+    //$dayText.innerHTML = data[0].date;
+    
     const arr = [];
     for (let i = 0; i < 2; i++) {
       const dic = {};
@@ -102,36 +169,11 @@ let mobileSelect = new MobileSelect({
   },
 });
 
-const url =
-  "https://cors-anywhere.herokuapp.com/https://test-menu.payco.kr/test/api";
 
-async function workTime() {
-  try {
-    const res = await axios.get(`${url}/work/time`);
 
-    if (res.data.status !== 0) {
-      throw new Error(res.data.message);
-    } else {
-      mobileSelect.updateWheel(0, res.data.result);
-    }
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-const confirm = () => {
-  if ($dayText.textContent === "") {
-    alert("날짜선택해주세요");
-  } else if ($timeText.textContent === "") {
-    alert("시간선택해주세요");
-  }
-};
-
-const init = () => {
-  window.addEventListener("DOMContentLoaded", () => {
-    workTime();
-    $button.addEventListener("click", confirm);
-  });
-};
-
-init();
+window.addEventListener("DOMContentLoaded", () => {   
+  scope.functions.init();
+  document.getElementById("btn_init").addEventListener("click", scope.functions.init);
+  document.getElementById("btn_getWorkPoint").addEventListener("click", scope.functions.getWorkPoint);
+  document.getElementById("btn_getWorkPointUseHistory").addEventListener("click", scope.functions.getWorkPointUseHistory);
+});
